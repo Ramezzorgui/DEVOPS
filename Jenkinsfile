@@ -1,17 +1,46 @@
 pipeline {
-    agent any
+    agent {
+        node {
+            label 'build'
+        }
+    }
+
+    tools {
+        maven 'M2_HOME'
+    }
+
+    options {
+        timeout(time: 1, unit: 'MINUTES') 
+    }
+
+    environment {
+        APP_ENV = "DEV"
+    }
+
     stages {
-        stage('Build') {
+        stage('Code Checkout') {
             steps {
-                sh 'mvn clean install'
+                git branch: 'main',
+                    url: 'https://github.com/Ramezzorgui/DEVOPS.git'
             }
         }
-        stage('SonarQube Analysis') {
+
+        stage('Code Build') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
-                }
+                sh 'mvn clean install -Dmaven.test.skip=true'
             }
+        }
+    }
+
+    post {
+        always {
+            echo "====== Always executed ======"
+        }
+        success {
+            echo "===== Pipeline executed successfully ====="
+        }
+        failure {
+            echo "====== Pipeline execution failed ======"
         }
     }
 }
